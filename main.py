@@ -1,12 +1,11 @@
 import tkinter as tk
-from PIL import ImageTk, Image
 import random
 
 #zmienne globalne
 CZAS = 0
 MINY = 40
 
-class Ustawienia():
+class Ustawienia:
 
 #---------------------------------------------
 #-------------konstruktor okna----------------
@@ -91,9 +90,6 @@ class Ustawienia():
 
         if not test:
             self.oknoGry()
-#---------------------------------------------
-#--------okno tworzące panel górny------------
-#---------------------------------------------
 
     def oknoGry(self):
         try:
@@ -125,9 +121,9 @@ class Ustawienia():
 
         return [self.minyLicznik, self.czasLicznik]
 
-#---------------------------------------------
-#--------licznik czasu gry oraz min-----------
-#---------------------------------------------
+    #---------------------------------------------
+    #--------licznik czasu gry oraz min-----------
+    #---------------------------------------------
 
     def liczCzas(self, licznik):
         global CZAS
@@ -139,12 +135,12 @@ class Ustawienia():
         licznik["text"] = "0"*(3 - len(str(MINY))) + str(MINY)
 
 
-#---------------------------------------------
-#-------okno tworzace siatke z grą------------
-#---------------------------------------------
+    #---------------------------------------------
+    #-------okno tworzace siatke z grą------------
+    #---------------------------------------------
 
     def planszaGry(self, przesuniecie):
-        self.przyciski = [tk.Button(self.master, height = 5, width = 5) for i in range(self.N*self.M)]
+        self.przyciski = [tk.Button(self.master, width = -1, height = -2) for i in range(self.N*self.M)]
         self.planszaGryLogika()
         for i in range(self.N):
             for j in range(self.M):
@@ -178,9 +174,9 @@ class Ustawienia():
 
         return self.ikonki
 
-#---------------------------------------------
-#--------przypisywanie polom min--------------
-#---------------------------------------------
+    #---------------------------------------------
+    #--------przypisywanie polom min--------------
+    #---------------------------------------------
 
     def planszaGryLogika(self):
         self.tablicaGry = [[0 for j in range(self.M)] for i in range(self.N)]
@@ -220,6 +216,11 @@ class Ustawienia():
                             self.sasiedzi.append((x+j, y+i))
 
         return self.sasiedzi
+#---------------------------------------------
+#--------okno tworzące panel górny------------
+#---------------------------------------------
+
+
 #---------------------------------------------
 #-------przypisyawnie tworzenie okna----------
 #---------------------------------------------
