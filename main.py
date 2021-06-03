@@ -13,8 +13,11 @@ class Ustawienia:
     def __init__(self, master):
 
         self.master = master
-
+        self.N = 6
+        self.M = 6
         self.objekt = self.oknoStartowe()
+
+
 
 #---------------------------------------------
 #--okno startowe do którego podaję parametry--
@@ -72,12 +75,12 @@ class Ustawienia:
 
         test = False
         if self.N < 2 or self.M < 2:
-            self.bladWartosci1 = tk.Label(self.master, text = "Podaj wartość większą niż 2",pady=10)
+            self.bladWartosci1 = tk.Label(self.master, text = "Podaj wartość większą niż 1",pady=10)
             self.bladWartosci1.pack()
             test = True
 
         if self.N > 15 or self.M > 15:
-            self.bladWartosci2 = tk.Label(self.master, text = "Podaj wartość mniejszą niż 15",pady=10)
+            self.bladWartosci2 = tk.Label(self.master, text = "Podaj wartość mniejszą niż 16",pady=10)
             self.bladWartosci2.pack()
             test = True
 
@@ -88,31 +91,38 @@ class Ustawienia:
 #---------------------------------------------
 
     def oknoGry(self):
-        for i in self.objekt:
-            i.destroy()
+        try:
+            for i in self.objekt:
+                i.destroy()
+        except AttributeError:
+            pass
 
-        if self.N <5:
-            self.licznik_min = tk.Label(self.master,width = 3, bg="black", fg="red", font=("", 20))
-            self.licznik_min.grid(row=0, column=self.M//2, columnspan=3)
-            self.licznik_min['text'] = '001'
+        if self.M < 5:
+            self.miny_licznik = tk.Label(self.master, width = 3, bg="black", fg="red", font=("", 20))
+            self.miny_licznik.grid(row=0, column=self.M//2-1, columnspan=3, pady=10)
 
-            self.licznik_czasu=tk.Label(self.master,width = 3, bg="black", fg="red", font=("", 20))
-            self.licznik_czasu.grid(row=1, column=self.M//2, columnspan=3)
-            self.licznik_czasu['text'] = '001'
+            self.czas_licznik=tk.Label(self.master, width = 3, bg="black", fg="red", font=("", 20))
+            self.czas_licznik.grid(row=1, column=self.M//2-1, columnspan=3, pady=10)
+            self.liczCzas(self.czas_licznik)
             self.planszaGry(1)
 
         else:
-            self.licznik_min = tk.Label(self.master, bg="black", fg="red", font=("", 20))
-            self.licznik_min.grid(row=0, column=0, columnspan=4)
-            self.licznik_min['text'] = '001'
+            self.miny_licznik = tk.Label(self.master, bg="black", fg="red", font=("", 16))
+            self.miny_licznik.grid(row=0, column=0, columnspan=4, pady=15)
 
-            self.licznik_czasu=tk.Label(self.master,width = 3, bg="black", fg="red", font=("", 20))
-            self.licznik_czasu.grid(row=0, column=self.M-4, columnspan=4)
-            self.licznik_czasu['text'] = '001'
+            self.czas_licznik=tk.Label(self.master, width = 3, bg="black", fg="red", font=("", 16))
+            self.czas_licznik.grid(row=0, column=self.M - 4, columnspan=4, pady=15)
+            self.liczCzas(self.czas_licznik)
             self.planszaGry(0)
 
 
-        return [self.licznik_min, self.licznik_czasu]
+        return [self.miny_licznik, self.czas_licznik]
+
+    def liczCzas(self, licznik):
+        global CZAS
+        CZAS += 1
+        licznik["text"] = "0"*(3 - len(str(CZAS))) + str(CZAS)
+        self.master.after(1000, self.liczCzas, licznik)
 
 #---------------------------------------------
 #-------okno tworzace siatke z grą------------
@@ -126,8 +136,6 @@ class Ustawienia:
                     self.przyciski[i*self.M+j].grid(row = i+przesuniecie+1, column = j, padx = (20, 0))
                 elif j == self.M-1:
                     self.przyciski[i*self.M+j].grid(row = i+przesuniecie++1, column = j, padx = (0, 20))
-                elif i == self.N-1:
-                    self.przyciski[i*self.M+j].grid(row = i+przesuniecie++1, column = j, pady = (0, 0)) # tutaj trzeba cos zmienic
                 else:
                     self.przyciski[i*self.M+j].grid(row = i+przesuniecie++1, column = j)
 
