@@ -140,7 +140,7 @@ class Ustawienia:
     #---------------------------------------------
 
     def planszaGry(self, przesuniecie):
-        self.przyciski = [tk.Button(self.master, width = -1, height = -2) for i in range(self.N*self.M)]
+        self.przyciski = [tk.Button(self.master, width = -2, height = -1) for i in range(self.N*self.M)]
         self.planszaGryLogika()
         for i in range(self.N):
             for j in range(self.M):
@@ -150,8 +150,8 @@ class Ustawienia:
                     self.przyciski[i*self.M+j].grid(row = i+przesuniecie++1, column = j, padx = (0, 20))
                 else:
                     self.przyciski[i*self.M+j].grid(row = i+przesuniecie++1, column = j)
-                    self.przyciski[i*self.M+j].bind('<Button-1>', lambda: self.lpm())
-                    self.przyciski[i*self.M+j].bind('<Button-3>', lambda event, p = self.przyciski[i*self.M+j]: self.ppm(p, self.ikonki))
+                self.przyciski[i*self.M+j].bind('<Button-1>', lambda: self.lpm())
+                self.przyciski[i*self.M+j].bind('<Button-3>', lambda event, p = self.przyciski[i*self.M+j]: self.ppm(p, self.ikonki))
 
         return self.przyciski
 
