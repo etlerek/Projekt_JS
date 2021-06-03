@@ -1,10 +1,12 @@
 import tkinter as tk
+from PIL import ImageTk, Image
+import random
 
 #zmienne globalne
 CZAS = 0
-MINY = 10
+MINY = 40
 
-class Ustawienia:
+class Ustawienia():
 
 #---------------------------------------------
 #-------------konstruktor okna----------------
@@ -13,9 +15,12 @@ class Ustawienia:
     def __init__(self, master):
 
         self.master = master
-        self.N = 6
-        self.M = 6
-        self.objekt = self.oknoStartowe()
+        self.N = 12
+        self.M = 12
+
+        self.ikonki = self.wczytajPliki()
+        self.oknoGry()
+#        self.objekt = self.oknoStartowe()
 
 
 
@@ -98,25 +103,31 @@ class Ustawienia:
             pass
 
         if self.M < 5:
-            self.miny_licznik = tk.Label(self.master, width = 3, bg="black", fg="red", font=("", 20))
-            self.miny_licznik.grid(row=0, column=self.M//2-1, columnspan=3, pady=10)
+            self.minyLicznik = tk.Label(self.master, width = 3, bg="black", fg="red", font=("", 20))
+            self.minyLicznik.grid(row=0, column=self.M // 2 - 1, columnspan=3, pady=10)
+            self.liczMiny(self.minyLicznik)
 
-            self.czas_licznik=tk.Label(self.master, width = 3, bg="black", fg="red", font=("", 20))
-            self.czas_licznik.grid(row=1, column=self.M//2-1, columnspan=3, pady=10)
-            self.liczCzas(self.czas_licznik)
+            self.czasLicznik=tk.Label(self.master, width = 3, bg="black", fg="red", font=("", 20))
+            self.czasLicznik.grid(row=1, column=self.M // 2 - 1, columnspan=3, pady=10)
+            self.liczCzas(self.czasLicznik)
             self.planszaGry(1)
 
         else:
-            self.miny_licznik = tk.Label(self.master, bg="black", fg="red", font=("", 16))
-            self.miny_licznik.grid(row=0, column=0, columnspan=4, pady=15)
+            self.minyLicznik = tk.Label(self.master, bg="black", fg="red", font=("", 16))
+            self.minyLicznik.grid(row=0, column=0, columnspan=4, pady=15)
+            self.liczMiny(self.minyLicznik)
 
-            self.czas_licznik=tk.Label(self.master, width = 3, bg="black", fg="red", font=("", 16))
-            self.czas_licznik.grid(row=0, column=self.M - 4, columnspan=4, pady=15)
-            self.liczCzas(self.czas_licznik)
+            self.czasLicznik=tk.Label(self.master, width = 3, bg="black", fg="red", font=("", 16))
+            self.czasLicznik.grid(row=0, column=self.M - 4, columnspan=4, pady=15)
+            self.liczCzas(self.czasLicznik)
             self.planszaGry(0)
 
 
-        return [self.miny_licznik, self.czas_licznik]
+        return [self.minyLicznik, self.czasLicznik]
+
+#---------------------------------------------
+#--------licznik czasu gry oraz min-----------
+#---------------------------------------------
 
     def liczCzas(self, licznik):
         global CZAS
@@ -124,12 +135,17 @@ class Ustawienia:
         licznik["text"] = "0"*(3 - len(str(CZAS))) + str(CZAS)
         self.master.after(1000, self.liczCzas, licznik)
 
+    def liczMiny(self, licznik):
+        licznik["text"] = "0"*(3 - len(str(MINY))) + str(MINY)
+
+
 #---------------------------------------------
 #-------okno tworzace siatke z grą------------
 #---------------------------------------------
 
     def planszaGry(self, przesuniecie):
-        self.przyciski = [tk.Button(root, height = 1, width = 2) for i in range(self.N*self.M)]
+        self.przyciski = [tk.Button(self.master, height = 5, width = 5) for i in range(self.N*self.M)]
+        self.planszaGryLogika()
         for i in range(self.N):
             for j in range(self.M):
                 if j == 0:
@@ -138,7 +154,72 @@ class Ustawienia:
                     self.przyciski[i*self.M+j].grid(row = i+przesuniecie++1, column = j, padx = (0, 20))
                 else:
                     self.przyciski[i*self.M+j].grid(row = i+przesuniecie++1, column = j)
+                    self.przyciski[i*self.M+j].bind('<Button-1>', lambda: self.lpm())
+                    self.przyciski[i*self.M+j].bind('<Button-3>', lambda event, p = self.przyciski[i*self.M+j]: self.ppm(p, self.ikonki))
 
+        return self.przyciski
+
+    def lpm(self):
+        pass
+
+    def ppm(self, przyciski, ikonki):
+
+        przyciski['image'] = ikonki['flaga']
+
+
+    def wczytajPliki(self):
+
+        """TODO: resize ikonek"""
+
+        self.ikonki = {}
+        self.ikonki['cyfry'] = [tk.PhotoImage(file = 'resources/' + str(i) + '.png') for i in range(1,9)]
+        self.ikonki['miny'] = [tk.PhotoImage(file = 'resources/mina' + str(i) + '.png') for i in range(1,3)]
+        self.ikonki['flaga'] = [tk.PhotoImage(file = 'resources/flag.png')]
+
+        return self.ikonki
+
+#---------------------------------------------
+#--------przypisywanie polom min--------------
+#---------------------------------------------
+
+    def planszaGryLogika(self):
+        self.tablicaGry = [[0 for j in range(self.M)] for i in range(self.N)]
+        self.liczbaMin = MINY
+
+
+        #wypisuje do konsoli plansze z grą, na której m oznacza minę, natomiast liczba oznaczy ilosc sąsiadujących min
+        while self.liczbaMin:
+            self.x = random.randint(0, self.M-1)
+            self.y = random.randint(0, self.N-1)
+            if self.tablicaGry[self.y][self.x] == 0:
+                self.tablicaGry[self.y][self.x] = 'm'
+                self.liczbaMin -= 1
+
+        for i in range(self.N):
+            for j in range(self.M):
+                if self.tablicaGry[i][j] == 0:
+                    self.sasiedzi = self.sasiadujaceMiny(j, i)
+                    self.liczba = 0
+                    for self.x, self.y in self.sasiedzi:
+                        if self.tablicaGry[self.y][self.x] == 'm':
+                            self.liczba += 1
+
+                    self.tablicaGry[i][j] = self.liczba
+        print(self.tablicaGry)
+
+        return self.tablicaGry
+
+    def sasiadujaceMiny(self, x, y):
+
+        self.sasiedzi = []
+        for i in range(-1, 2):
+            for j in range(-1,2):
+                if not i == 0 and j == 0:
+                    if y + i >= 0 and y+ i < self.N:
+                        if x+j >= 0 and x +j < self.M:
+                            self.sasiedzi.append((x+j, y+i))
+
+        return self.sasiedzi
 #---------------------------------------------
 #-------przypisyawnie tworzenie okna----------
 #---------------------------------------------
