@@ -3,7 +3,7 @@ import random
 
 #zmienne globalne
 CZAS = 0
-MINY = 40
+MINY = 10
 
 class Ustawienia:
 
@@ -18,8 +18,8 @@ class Ustawienia:
         self.M = 12
 
         self.ikonki = self.wczytajPliki()
-        self.oknoGry()
-#        self.objekt = self.oknoStartowe()
+
+        self.objekt = self.oknoStartowe()
 
 
 
@@ -150,22 +150,36 @@ class Ustawienia:
                     self.przyciski[i*self.M+j].grid(row = i+przesuniecie++1, column = j, padx = (0, 20))
                 else:
                     self.przyciski[i*self.M+j].grid(row = i+przesuniecie++1, column = j)
-                self.przyciski[i*self.M+j].bind('<Button-1>', lambda: self.lpm())
+                self.przyciski[i*self.M+j].bind('<Button-1>', lambda event, p = self.przyciski[i*self.M+j]: self.lpm(self.przyciski, p, self.tablicaGry, self.ikonki))
                 self.przyciski[i*self.M+j].bind('<Button-3>', lambda event, p = self.przyciski[i*self.M+j]: self.ppm(p, self.ikonki))
 
         return self.przyciski
 
-    def lpm(self):
-        pass
+    def lpm(self, przyciski, przycisk, tablicaGry, ikonki):
+        index = przyciski.index(przycisk)
+        pole = tablicaGry[index//self.M][index%self.M]
+        print(pole)
+
+        if pole == 'm':
+            print('Ups, mina')
+        else:
+            if pole != 0:
+                przycisk['image'] = ikonki['cyfry'][pole - 1]
 
     def ppm(self, przyciski, ikonki):
 
-        przyciski['image'] = ikonki['flaga']
+        global MINY
 
+        if przyciski.cget('image'):
+            przyciski['image'] = ''
+            MINY += 1
+        else:
+            przyciski['image'] = ikonki['flaga']
+            MINY -= 1
+
+        self.liczMiny(self.minyLicznik)
 
     def wczytajPliki(self):
-
-        """TODO: resize ikonek"""
 
         self.ikonki = {}
         self.ikonki['cyfry'] = [tk.PhotoImage(file = 'resources/' + str(i) + '.png') for i in range(1,9)]
@@ -174,35 +188,36 @@ class Ustawienia:
 
         return self.ikonki
 
-    #---------------------------------------------
-    #--------przypisywanie polom min--------------
-    #---------------------------------------------
+
+#---------------------------------------------
+#--------przypisywanie polom min--------------
+#---------------------------------------------
 
     def planszaGryLogika(self):
         self.tablicaGry = [[0 for j in range(self.M)] for i in range(self.N)]
-        self.liczbaMin = MINY
+        liczbaMin = MINY
 
+        while liczbaMin:
+            x = random.randint(0, self.M-1)
+            y = random.randint(0, self.N-1)
 
-        #wypisuje do konsoli plansze z grą, na której m oznacza minę, natomiast liczba oznaczy ilosc sąsiadujących min
-        while self.liczbaMin:
-            self.x = random.randint(0, self.M-1)
-            self.y = random.randint(0, self.N-1)
-            if self.tablicaGry[self.y][self.x] == 0:
-                self.tablicaGry[self.y][self.x] = 'm'
-                self.liczbaMin -= 1
+            if self.tablicaGry[y][x] == 0:
+                self.tablicaGry[y][x] = 'm'
+                liczbaMin -= 1
 
         for i in range(self.N):
             for j in range(self.M):
                 if self.tablicaGry[i][j] == 0:
-                    self.sasiedzi = self.sasiadujaceMiny(j, i)
-                    self.liczba = 0
-                    for self.x, self.y in self.sasiedzi:
-                        if self.tablicaGry[self.y][self.x] == 'm':
-                            self.liczba += 1
+                    sasiedzi = self.sasiadujaceMiny(j, i)
 
-                    self.tablicaGry[i][j] = self.liczba
+                    liczbaMin = 0
+                    for x, y in sasiedzi:
+                        if self.tablicaGry[y][x] == 'm':
+                            liczbaMin += 1
+
+                    self.tablicaGry[i][j] = liczbaMin
+
         print(self.tablicaGry)
-
         return self.tablicaGry
 
     def sasiadujaceMiny(self, x, y):
@@ -210,12 +225,14 @@ class Ustawienia:
         self.sasiedzi = []
         for i in range(-1, 2):
             for j in range(-1,2):
-                if not i == 0 and j == 0:
-                    if y + i >= 0 and y+ i < self.N:
-                        if x+j >= 0 and x +j < self.M:
-                            self.sasiedzi.append((x+j, y+i))
+                if not (i ==0 and j==0):
+                    if y+1 >= 0 and y+i <self.N:
+                        if x+j >=0 and x + j < self.M:
+                            self.sasiedzi.append((x+j, y + i))
 
+        #print(self.sasiedzi)
         return self.sasiedzi
+
 #---------------------------------------------
 #--------okno tworzące panel górny------------
 #---------------------------------------------
