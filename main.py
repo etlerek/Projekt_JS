@@ -3,7 +3,8 @@ import random
 
 # zmienne globalne
 CZAS = 0
-MINY = 1
+MINY = None
+TRAFIONE_MINY = 0
 
 class Gra:
     """klasa główna z grą"""
@@ -14,6 +15,7 @@ class Gra:
         self.N = 4
         self.M = 4
         self.master.minsize(150, 100)
+        self.game = True
         #self.oknoGry()
         self.ikonki = self.wczytajPliki()
 
@@ -68,14 +70,18 @@ class Gra:
             pass
 
         global MINY
+        global POZOSTALE_FLAGI
+
         MINY = self.liczbamin.get()
         self.N = self.dlugosc.get()
         self.M = self.szerokoksc.get()
+        POZOSTALE_FLAGI = self.liczbamin.get()
 
         try:
             self.N = int(self.N)
             self.M = int(self.M)
             MINY = int(MINY)
+            POZOSTALE_FLAGI = int(POZOSTALE_FLAGI)
 
         except ValueError:
             self.bladWartosci1 = tk.Label(self.master, text="Prosze podać liczbę!", pady=10)
@@ -92,6 +98,7 @@ class Gra:
             self.bladWartosci2 = tk.Label(self.master, text="Podaj wartość mniejszą niż 16", pady=10)
             self.bladWartosci2.pack()
             test = True
+
         if MINY > self.N*self.M or MINY < 0:
             self.bladWartosci3 = tk.Label(self.master, text="Podałeś błędną liczbę min", pady=10)
             self.bladWartosci3.pack()
@@ -136,11 +143,13 @@ class Gra:
         global CZAS
         CZAS += 1
         licznik["text"] = "0" * (3 - len(str(CZAS))) + str(CZAS)
-        self.master.after(1000, self.liczCzas, licznik)
+        if self.game == True:
+            self.master.after(1000, self.liczCzas, licznik)
+
 
     def liczMiny(self, licznik):
         """aktualizuje licznik min"""
-        licznik["text"] = "0" * (3 - len(str(MINY))) + str(MINY)
+        licznik["text"] = "0" * (3 - len(str(POZOSTALE_FLAGI))) + str(POZOSTALE_FLAGI)
 
     def planszaGry(self):
         """tworzy siatkę z grą"""
@@ -165,37 +174,73 @@ class Gra:
     def lpm(self, przycisk):
         """obsługa lewego przycisu myszy"""
 
-        global MINY
+        global POZOSTALE_FLAGI
         index = self.przyciski.index(przycisk)
         pole = self.tablicaGry[index // self.M][index % self.M]
         print(pole)
 
         if przycisk.cget('image'):
             przycisk['image'] = ''
-            MINY += 1
+            POZOSTALE_FLAGI += 1
             self.liczMiny(self.minyLicznik)
 
         if pole == 'm':
-            self.koniecGry(index, pole)
+            self.koniecGry()
         else:
             self.aktualizujPrzycisk(index, pole)
 
-    def ppm(self, przyciski):
+    def ppm(self, przycisk):
         """obsługa prawego przycisku myszy"""
+        index = self.przyciski.index(przycisk)
+        pole = self.tablicaGry[index // self.M][index % self.M]
 
+        global POZOSTALE_FLAGI
+        global TRAFIONE_MINY
         global MINY
-        if przyciski.cget('image'):
-            przyciski['image'] = ''
-            MINY += 1
+        if przycisk.cget('image'):
+            przycisk['image'] = ''
+            POZOSTALE_FLAGI += 1
+            if pole == 'm':
+                TRAFIONE_MINY -= 1
         else:
-            przyciski['image'] = self.ikonki['flaga']
-            MINY -= 1
+            przycisk['image'] = self.ikonki['flaga']
+            POZOSTALE_FLAGI -= 1
+            if pole == 'm':
+                TRAFIONE_MINY += 1
+                if TRAFIONE_MINY == MINY:
+                    self.wygranaGra()
 
         self.liczMiny(self.minyLicznik)
 
-    def koniecGry(self, index, pole):
-        """okno wyświetlane po zakończeniu gry"""
+    def wygranaGra(self):
+        """okno wyświetlane po wygraniu gry"""
+        self.game = False
+        print("wygrales")
+        for i in range(self.N):
+            for j in range(self.M):
+                if isinstance(self.przyciski[i * self.M + j], tk.Button) and self.przyciski[i * self.M + j]['state'] != 'disabled':
+                    self.przyciski[i*self.M + j].configure(state='disabled')
+                    self.przyciski[i*self.M + j].unbind("<Button-1>")
+                    self.przyciski[i*self.M + j].unbind("<Button-3>")
 
+    def koniecGry(self):
+        """okno wyświetlane po przegraniu gry"""
+        self.game = False
+        print("przegrales")
+        for i in range(self.N):
+            for j in range(self.M):
+                    if isinstance(self.przyciski[i * self.M + j], tk.Button) and self.przyciski[i * self.M + j]['state'] != 'disabled':
+                        self.przyciski[i*self.M + j].configure(state='disabled')
+                        self.przyciski[i*self.M + j].unbind("<Button-1>")
+                        self.przyciski[i*self.M + j].unbind("<Button-3>")
+                        if self.tablicaGry[i][j] == 'm':
+                            self.przyciski[i*self.M + j] = tk.Label(root, image = self.ikonki['miny'][0])
+                            if j == 0:
+                                self.przyciski[i*self.M + j].grid(row=i+1, column=j, padx=(20, 0))
+                            elif j == self.M - 1:
+                                self.przyciski[i*self.M + j].grid(row=i+1, column=j, padx=(0, 20))
+                            else:
+                                self.przyciski[i*self.M + j].grid(row=i+1, column=j)
 
     def aktualizujPrzycisk(self, index, pole):
         """aktualizuje wciśnięty przycisk na gridzie planszy z grą"""
