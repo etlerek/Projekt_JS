@@ -4,14 +4,18 @@ import game
 
 def glowneOkno():
     """ustawienia okna głównego"""
+    # try:
+    #
+    # except UnboundLocalError:
+    #     pass
+
     root = tk.Tk()
     root.title('Saper')
-
-    return root
+    root.iconphoto(False, tk.PhotoImage(file = 'resources/mina1.png'))
+    app = game.Gra(root)
+    root.mainloop()
 
 if __name__ == '__main__':
     """funkcja main"""
-    root = glowneOkno()
-    app = game.Gra(root)
-    del app
-    root.mainloop()
+    glowneOkno()
+

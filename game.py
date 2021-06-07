@@ -1,3 +1,5 @@
+import os
+import sys
 import tkinter as tk
 import random
 
@@ -29,12 +31,12 @@ class Gra:
         self.autor = tk.Label(text="Autor: Damian Madej", padx=50, pady=10)
         self.autor.pack()
 
-        self.podajN = tk.Label(text="Podaj długość:")
+        self.podajN = tk.Label(text="Podaj wysokość:")
         self.podajN.pack()
         self.e1 = tk.Entry(self.master, textvariable=self.dlugosc, width=5, borderwidth=5)
         self.e1.pack()
 
-        self.podajM = tk.Label(text="Podaj wysokość:")
+        self.podajM = tk.Label(text="Podaj długość:")
         self.podajM.pack()
         self.e2 = tk.Entry(self.master, textvariable=self.szerokoksc, width=5, borderwidth=5)
         self.e2.pack()
@@ -129,6 +131,10 @@ class Gra:
             self.minyLicznik.grid(row=0, column=0, columnspan=4, pady=15)
             self.liczMiny(self.minyLicznik)
 
+            if self.M > 7:
+                self.nowaGraPrzycisk = tk.Button(self.master, text = "Nowa \nGra", command = lambda : self.nowaGra())
+                self.nowaGraPrzycisk.grid(row=0, column=self.M//2-2, columnspan=4, pady=15)
+
             self.czasLicznik = tk.Label(self.master, bg="black", fg="red", font=("", 16))
             self.czasLicznik.grid(row=0, column=self.M - 4, columnspan=4, pady=15)
             self.liczCzas(self.czasLicznik)
@@ -167,8 +173,7 @@ class Gra:
                                                     lambda event, p=self.przyciski[i * self.M + j]: self.lpm(p))
                 self.przyciski[i * self.M + j].bind('<Button-3>',
                                                     lambda event, p=self.przyciski[i * self.M + j]: self.ppm(p))
-
-        self.e = tk.Entry(self.master, textvariable = self.code, width=5).grid(row = self.N+2, column = 0, columnspan = self.N)
+        self.e = tk.Entry(self.master, textvariable = self.code, width=self.M*4).grid(row = self.N+3, column = 0, columnspan = self.M)
         self.master.bind('<Return>', lambda event: self.kod())
 
         return self.przyciski
@@ -229,8 +234,9 @@ class Gra:
 
     def lpm(self, przycisk):
         """obsługa lewego przycisu myszy"""
-
         global POZOSTALE_FLAGI
+        global TRAFIONE_MINY
+        global MINY
         index = self.przyciski.index(przycisk)
         pole = self.tablicaGry[index // self.M][index % self.M]
         print(pole)
@@ -245,6 +251,10 @@ class Gra:
         else:
             self.aktualizujPrzycisk(index, pole)
 
+        if TRAFIONE_MINY == MINY:
+            if self.game == True:
+                self.wygranaGra()
+
     def ppm(self, przycisk):
         """obsługa prawego przycisku myszy"""
         index = self.przyciski.index(przycisk)
@@ -258,13 +268,17 @@ class Gra:
             POZOSTALE_FLAGI += 1
             if pole == 'm':
                 TRAFIONE_MINY -= 1
+
         else:
             przycisk['image'] = self.ikonki['flaga']
             POZOSTALE_FLAGI -= 1
             if pole == 'm':
                 TRAFIONE_MINY += 1
-                if TRAFIONE_MINY == MINY:
-                    self.wygranaGra()
+
+        if TRAFIONE_MINY == MINY and POZOSTALE_FLAGI == 0:
+            print(TRAFIONE_MINY)
+            print(MINY)
+            self.wygranaGra()
 
         self.liczMiny(self.minyLicznik)
 
@@ -272,19 +286,19 @@ class Gra:
         """okno wyświetlane po wygraniu gry"""
         self.game = False
         global CZAS
-        info = "Gratulacje! Udało Ci się wygrać w " + str(CZAS+1) +"s :D"
+        info = "Gratulacje! Udało Ci się wygrać w " + str(CZAS+1) +"s"
         for i in range(self.N):
             for j in range(self.M):
                 if isinstance(self.przyciski[i * self.M + j], tk.Button) and self.przyciski[i * self.M + j]['state'] != 'disabled':
                     self.przyciski[i*self.M + j].configure(state='disabled')
                     self.przyciski[i*self.M + j].unbind("<Button-1>")
                     self.przyciski[i*self.M + j].unbind("<Button-3>")
-        self.noweOkno(info)
+        self.noweOkno(info, 0)
 
     def koniecGry(self):
         """okno wyświetlane po przegraniu gry"""
         self.game = False
-        info = "Niestety, tym razem przegrywasz :("
+        info = "Niestety, tym razem przegrywasz"
         for i in range(self.N):
             for j in range(self.M):
                 if isinstance(self.przyciski[i * self.M + j], tk.Button) and self.przyciski[i * self.M + j]['state'] != 'disabled':
@@ -292,26 +306,33 @@ class Gra:
                     self.przyciski[i*self.M + j].unbind("<Button-1>")
                     self.przyciski[i*self.M + j].unbind("<Button-3>")
                     if self.tablicaGry[i][j] == 'm':
-                        self.przyciski[i*self.M + j] = tk.Label(self.master, image = self.ikonki['miny'][0])
+                        self.przyciski[i*self.M + j] = tk.Label(self.master, image = self.ikonki['miny'][1])
                         if j == 0:
                             self.przyciski[i*self.M + j].grid(row=i+1, column=j, padx=(20, 0))
                         elif j == self.M - 1:
                             self.przyciski[i*self.M + j].grid(row=i+1, column=j, padx=(0, 20))
                         else:
                             self.przyciski[i*self.M + j].grid(row=i+1, column=j)
-        self.noweOkno(info)
+        self.noweOkno(info, 1)
 
-    def noweOkno(self, info):
+    def noweOkno(self, info, nrBuzki):
         """tworzy nowe okno informujące o wygranej lub przegranej gracza"""
         newWindow = tk.Toplevel(self.master)
         newWindow.title("Koniec gry")
-        newWindow.geometry("300x100")
-        tk.Label(newWindow, text = info, pady = 40).pack()
-
+        tk.Label(newWindow, text = info,padx = 20, pady = 10, font = ("", 15)).pack()
+        tk.Label(newWindow, image = self.ikonki['buzia'][nrBuzki]).pack()
+        tk.Label(newWindow, pady = 5).pack()
+        tk.Button(newWindow, text = "Rozpocznij nową grę", command=lambda: self.nowaGra()).pack()
+        tk.Button(newWindow, text = "Wyjdź z gry", command=lambda: exit()).pack()
+        tk.Label(newWindow, pady = 5).pack()
 
     def aktualizujPrzycisk(self, index, pole):
         """aktualizuje wciśnięty przycisk na gridzie planszy z grą"""
+        global POZOSTALE_FLAGI
 
+        if self.przyciski[index].cget('image'):
+            POZOSTALE_FLAGI += 1
+            self.liczMiny(self.minyLicznik)
         self.przyciski[index].configure(state='disabled', border = 2)
         self.przyciski[index].config(bg='grey70')
         self.przyciski[index].unbind("<Button-1>")
@@ -338,5 +359,11 @@ class Gra:
         self.ikonki['cyfry'] = [tk.PhotoImage(file='resources/' + str(i) + '.png') for i in range(1, 9)]
         self.ikonki['miny'] = [tk.PhotoImage(file='resources/mina' + str(i) + '.png') for i in range(1, 3)]
         self.ikonki['flaga'] = [tk.PhotoImage(file='resources/flag.png')]
+        self.ikonki['buzia'] = [tk.PhotoImage(file='resources/buzia' + str(i) + '.png') for i in range(1, 3)]
 
         return self.ikonki
+
+    def nowaGra(self):
+        """rozpocznij nową grę"""
+        os.execl(sys.executable, sys.executable, *sys.argv)
+
