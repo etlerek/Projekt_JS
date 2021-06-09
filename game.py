@@ -24,29 +24,29 @@ class Gra:
 
     def oknoStartowe(self):
         """okno startowe do którego podaję parametry"""
-        self.dlugosc = tk.StringVar()
-        self.szerokoksc = tk.StringVar()
-        self.liczbamin = tk.StringVar()
+        dlugosc = tk.StringVar()
+        szerokosc = tk.StringVar()
+        liczbamin = tk.StringVar()
 
         self.autor = tk.Label(text="Autor: Damian Madej", padx=50, pady=10)
         self.autor.pack()
 
         self.podajN = tk.Label(text="Podaj wysokość:")
         self.podajN.pack()
-        self.e1 = tk.Entry(self.master, textvariable=self.dlugosc, width=5, borderwidth=5)
+        self.e1 = tk.Entry(self.master, textvariable=dlugosc, width=5, borderwidth=5)
         self.e1.pack()
 
         self.podajM = tk.Label(text="Podaj długość:")
         self.podajM.pack()
-        self.e2 = tk.Entry(self.master, textvariable=self.szerokoksc, width=5, borderwidth=5)
+        self.e2 = tk.Entry(self.master, textvariable=szerokosc, width=5, borderwidth=5)
         self.e2.pack()
 
         self.podajMiny = tk.Label(text="Podaj liczbę min:")
         self.podajMiny.pack()
-        self.e3 = tk.Entry(self.master, textvariable=self.liczbamin, width=5, borderwidth=5)
+        self.e3 = tk.Entry(self.master, textvariable=liczbamin, width=5, borderwidth=5)
         self.e3.pack()
 
-        self.przyciskOk = tk.Button(self.master, text="GRAJ!", command=lambda: self.nacisniecieGraj())
+        self.przyciskOk = tk.Button(self.master, text="GRAJ!", command=lambda: self.nacisniecieGraj(dlugosc, szerokosc, liczbamin))
         self.przyciskOk.pack()
 
         self.bladWartosci1 = tk.Label(pady=10)
@@ -55,7 +55,7 @@ class Gra:
         return [self.autor, self.podajN, self.e1, self.podajM, self.e2, self.podajMiny, self.e3, self.przyciskOk, self.bladWartosci1]
 
 
-    def nacisniecieGraj(self):
+    def nacisniecieGraj(self, d, s, lm):
         """obsługa przycisku Graj"""
         try:
             self.bladWartosci1.destroy()
@@ -73,10 +73,10 @@ class Gra:
         global MINY
         global POZOSTALE_FLAGI
 
-        MINY = self.liczbamin.get()
-        self.N = self.dlugosc.get()
-        self.M = self.szerokoksc.get()
-        POZOSTALE_FLAGI = self.liczbamin.get()
+        MINY = lm.get()
+        self.N = d.get()
+        self.M = s.get()
+        POZOSTALE_FLAGI = lm.get()
 
         try:
             self.N = int(self.N)
@@ -94,19 +94,23 @@ class Gra:
             self.bladWartosci1 = tk.Label(self.master, text="Podaj wartość większą niż 1", pady=10)
             self.bladWartosci1.pack()
             test = True
+            return test
 
         if self.N > 15 or self.M > 15:
             self.bladWartosci2 = tk.Label(self.master, text="Podaj wartość mniejszą niż 16", pady=10)
             self.bladWartosci2.pack()
             test = True
+            return test
 
         if MINY > self.N*self.M or MINY < 0:
             self.bladWartosci3 = tk.Label(self.master, text="Podałeś błędną liczbę min", pady=10)
             self.bladWartosci3.pack()
             test = True
+            return test
 
         if not test:
             self.goraOkna()
+
 
     def goraOkna(self):
         """Tworzy górę okna z licznikami"""
@@ -215,7 +219,6 @@ class Gra:
 
                     self.tablicaGry[i][j] = liczbaMin
 
-        print(self.tablicaGry)
         return self.tablicaGry
 
     def sasiadujacePola(self, x, y):
@@ -229,7 +232,6 @@ class Gra:
                         if 0 <= x + j < self.M:
                             sasiedzi.append((x + j, y + i))
 
-        print(x, y, len(sasiedzi))
         return sasiedzi
 
     def lpm(self, przycisk):
@@ -239,7 +241,6 @@ class Gra:
         global MINY
         index = self.przyciski.index(przycisk)
         pole = self.tablicaGry[index // self.M][index % self.M]
-        print(pole)
 
         if przycisk.cget('image'):
             przycisk['image'] = ''
@@ -251,9 +252,11 @@ class Gra:
         else:
             self.aktualizujPrzycisk(index, pole)
 
-        if TRAFIONE_MINY == MINY:
+        if TRAFIONE_MINY == MINY and POZOSTALE_FLAGI == 0:
             if self.game == True:
                 self.wygranaGra()
+
+        return pole
 
     def ppm(self, przycisk):
         """obsługa prawego przycisku myszy"""
@@ -276,8 +279,6 @@ class Gra:
                 TRAFIONE_MINY += 1
 
         if TRAFIONE_MINY == MINY and POZOSTALE_FLAGI == 0:
-            print(TRAFIONE_MINY)
-            print(MINY)
             self.wygranaGra()
 
         self.liczMiny(self.minyLicznik)

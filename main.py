@@ -4,10 +4,6 @@ import game
 
 def glowneOkno():
     """ustawienia okna głównego"""
-    # try:
-    #
-    # except UnboundLocalError:
-    #     pass
 
     root = tk.Tk()
     root.title('Saper')
